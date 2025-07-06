@@ -1,5 +1,7 @@
 package com.teamsync.teamsync.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.teamsync.teamsync.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,12 +23,14 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    @JsonIgnore
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
     @ManyToOne
+    @JsonManagedReference
     private Team team;
 
 }
