@@ -2,7 +2,6 @@ package com.teamsync.teamsync.service;
 
 import com.teamsync.teamsync.entity.Team;
 import com.teamsync.teamsync.repository.TeamRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
