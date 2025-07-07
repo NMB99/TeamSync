@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tasks")
+@RequestMapping("/api/teams")
 public class TeamController {
 
     private final TeamService teamService;
@@ -21,13 +21,13 @@ public class TeamController {
 
     @PostMapping
     public ResponseEntity<Team> createTeam(@RequestBody Team team) {
-        Team createdTeam = teamService.createTeam(team);
-        return new ResponseEntity<>(createdTeam, HttpStatus.CREATED);
+        Team newTeam = teamService.createTeam(team);
+        return new ResponseEntity<>(newTeam, HttpStatus.CREATED);
     }
 
     @GetMapping
     public ResponseEntity<List<Team>> getAllTeams() {
-        return teamService.getAllTeams();
+        return ResponseEntity.ok(teamService.getAllTeams());
     }
 
     @GetMapping("/{id}")
@@ -53,4 +53,15 @@ public class TeamController {
         }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Team> deleteTeam(@PathVariable Long id) {
+        try {
+            Team deleted = teamService.deleteTeam(id);
+            return new ResponseEntity<>(deleted, HttpStatus.OK);
+        }
+        catch (EntityNotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+  
 }
