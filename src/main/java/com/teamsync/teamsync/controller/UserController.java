@@ -1,7 +1,8 @@
 package com.teamsync.teamsync.controller;
 
+import com.teamsync.teamsync.dto.UserCreateDTO;
+import com.teamsync.teamsync.dto.UserDTO;
 import com.teamsync.teamsync.dto.UserUpdateDTO;
-import com.teamsync.teamsync.entity.User;
 import com.teamsync.teamsync.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,23 +22,23 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User newUser = userService.createUser(user);
+    public ResponseEntity<UserDTO> createUser(@RequestBody @Valid UserCreateDTO newUserDTO) {
+        UserDTO newUser = userService.createUser(newUserDTO);
         return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUser(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUser(id));
+    public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody @Valid UserUpdateDTO user) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody @Valid UserUpdateDTO user) {
         return ResponseEntity.ok(userService.updateUser(id, user));
     }
 

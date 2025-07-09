@@ -1,7 +1,5 @@
 package com.teamsync.teamsync.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,11 +23,9 @@ public class Standup {
     private String blockers;
 
     @ManyToOne
-    @JsonIgnore
     private User user;
 
     @ManyToOne
-    @JsonIgnore
     private Team team;
 
 }

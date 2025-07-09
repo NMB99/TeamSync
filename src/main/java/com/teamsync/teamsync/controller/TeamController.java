@@ -1,8 +1,11 @@
 package com.teamsync.teamsync.controller;
 
-import com.teamsync.teamsync.entity.Team;
+import com.teamsync.teamsync.dto.TeamCreateDTO;
+import com.teamsync.teamsync.dto.TeamDTO;
+import com.teamsync.teamsync.dto.TeamUpdateDTO;
 import com.teamsync.teamsync.service.TeamService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,21 +23,21 @@ public class TeamController {
     }
 
     @PostMapping
-    public ResponseEntity<Team> createTeam(@RequestBody Team team) {
-        Team newTeam = teamService.createTeam(team);
+    public ResponseEntity<TeamDTO> createTeam(@RequestBody @Valid TeamCreateDTO newTeamDTO) {
+        TeamDTO newTeam = teamService.createTeam(newTeamDTO);
         return new ResponseEntity<>(newTeam, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<Team>> getAllTeams() {
+    public ResponseEntity<List<TeamDTO>> getAllTeams() {
         return ResponseEntity.ok(teamService.getAllTeams());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Team> getTeamById(@PathVariable Long id) {
+    public ResponseEntity<TeamDTO> getTeamById(@PathVariable Long id) {
 
         try {
-            Team team = teamService.getTeamById(id);
+            TeamDTO team = teamService.getTeamById(id);
             return new ResponseEntity<>(team, HttpStatus.OK);
         }
         catch (EntityNotFoundException e) {
@@ -43,10 +46,9 @@ public class TeamController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Team> updateTeam(@PathVariable Long id, @RequestBody Team team) {
+    public ResponseEntity<TeamDTO> updateTeam(@PathVariable Long id, @RequestBody @Valid TeamUpdateDTO team) {
         try {
-            Team updated = teamService.updateTeam(id, team);
-            return new ResponseEntity<>(updated, HttpStatus.OK);
+            return ResponseEntity.ok(teamService.updateTeam(id, team));
         }
         catch (EntityNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -54,10 +56,10 @@ public class TeamController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Team> deleteTeam(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTeam(@PathVariable Long id) {
         try {
-            Team deleted = teamService.deleteTeam(id);
-            return new ResponseEntity<>(deleted, HttpStatus.OK);
+            teamService.deleteTeam(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
         catch (EntityNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

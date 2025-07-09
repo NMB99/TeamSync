@@ -1,61 +1,73 @@
 package com.teamsync.teamsync.service;
 
+import com.teamsync.teamsync.dto.StandupCreateDTO;
 import com.teamsync.teamsync.dto.StandupDTO;
+import com.teamsync.teamsync.dto.StandupUpdateDTO;
 import com.teamsync.teamsync.entity.Standup;
 import com.teamsync.teamsync.repository.StandupRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class StandupService {
 
     private final StandupRepository standupRepository;
+    private final TeamService teamService;
+    private final UserService userService;
 
-    public StandupService(StandupRepository standupRepository) {
+    public StandupService(StandupRepository standupRepository, TeamService teamService, UserService userService) {
         this.standupRepository = standupRepository;
+        this.teamService = teamService;
+        this.userService = userService;
     }
 
-    public Standup createStandup(Standup standup) {
-        return standupRepository.save(standup);
+    public StandupDTO createStandup(StandupCreateDTO standupDTO) {
+        Standup standup = new Standup();
+        standup.setDate(
+                standupDTO.getDate() != null ? standupDTO.getDate() : LocalDate.now()
+        );
+        standup.setYesterday(standupDTO.getYesterday());
+        standup.setToday(standupDTO.getToday());
+        standup.setUser(userService.getUserEntityById(standupDTO.getUserId()));
+        standup.setTeam(teamService.getTeamEntityById(standupDTO.getTeamId()));
+        return convertStandupToDTO(standupRepository.save(standup));
     }
 
     public List<StandupDTO> getAllStandups() {
         List<Standup> standups = standupRepository.findAll();
-        return standups.stream().map(this::createStandupDTO).toList();
+        return standups.stream().map(this::convertStandupToDTO).toList();
     }
 
     public StandupDTO getStandupById(long id) {
-        Standup standup = standupRepository.findById(id).orElse(null);
-        if (standup != null) {
-            return createStandupDTO(standup);
-        }
-        return null;
+        Standup standup = standupRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Standup with id " + id + " not found"));
+
+        return convertStandupToDTO(standup);
     }
 
-    public Standup updateStandup(long id, Standup standup) {
-        Standup exists = standupRepository.findById(id).orElse(null);
-        if (exists != null) {
-            exists.setDate(standup.getDate());
-            exists.setYesterday(standup.getYesterday());
-            exists.setToday(standup.getToday());
-            exists.setBlockers(standup.getBlockers());
-            exists.setUser(standup.getUser());
-            exists.setTeam(standup.getTeam());
-            return standupRepository.save(exists);
-        }
-        return null;
+    public StandupDTO updateStandup(long id, StandupUpdateDTO standup) {
+        Standup exists = standupRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Standup with id " + id + " not found"));
+
+        exists.setYesterday(standup.getYesterday());
+        exists.setToday(standup.getToday());
+        exists.setBlockers(standup.getBlockers());
+        standupRepository.save(exists);
+
+        return convertStandupToDTO(exists);
     }
 
-    public Standup deleteStandup(long id) {
-        Standup standup = standupRepository.findById(id).orElse(null);
-        if (standup != null) {
-            standupRepository.delete(standup);
-        }
-        return standup;
+    public void deleteStandup(long id) {
+        Standup standup = standupRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Standup with id " + id + " not found"));
+
+        standupRepository.delete(standup);
     }
 
-    private StandupDTO createStandupDTO(Standup standup) {
+    private StandupDTO convertStandupToDTO(Standup standup) {
         StandupDTO standupDTO = new StandupDTO();
         standupDTO.setId(standup.getId());
         standupDTO.setDate(standup.getDate());
