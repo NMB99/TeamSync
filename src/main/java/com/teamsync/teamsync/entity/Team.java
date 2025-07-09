@@ -1,8 +1,7 @@
 package com.teamsync.teamsync.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.teamsync.teamsync.enums.TeamCategory;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,17 +19,16 @@ public class Team {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
     private String name;
-
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    private TeamCategory category;
+
     @OneToMany(mappedBy = "team")
-    @JsonManagedReference
     private List<User> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "team")
-    @JsonManagedReference
     private List<Standup> standups =  new ArrayList<>();
 
 }

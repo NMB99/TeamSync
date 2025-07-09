@@ -1,9 +1,11 @@
 package com.teamsync.teamsync.controller;
 
+import com.teamsync.teamsync.dto.StandupCreateDTO;
 import com.teamsync.teamsync.dto.StandupDTO;
-import com.teamsync.teamsync.entity.Standup;
+import com.teamsync.teamsync.dto.StandupUpdateDTO;
 import com.teamsync.teamsync.service.StandupService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +23,8 @@ public class StandupController {
     }
 
     @PostMapping
-    public ResponseEntity<Standup> createStandup(@RequestBody Standup standup) {
-        Standup newStandup = standupService.createStandup(standup);
+    public ResponseEntity<StandupDTO> createStandup(@RequestBody @Valid StandupCreateDTO standup) {
+        StandupDTO newStandup = standupService.createStandup(standup);
         return new ResponseEntity<>(newStandup, HttpStatus.CREATED);
     }
 
@@ -43,9 +45,9 @@ public class StandupController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Standup> updateStandup(@PathVariable long id, @RequestBody Standup standup) {
+    public ResponseEntity<StandupDTO> updateStandup(@PathVariable long id, @RequestBody @Valid StandupUpdateDTO standup) {
         try {
-            Standup updated = standupService.updateStandup(id, standup);
+            StandupDTO updated = standupService.updateStandup(id, standup);
             return new ResponseEntity<>(updated, HttpStatus.OK);
         }
         catch (EntityNotFoundException e) {
@@ -54,10 +56,10 @@ public class StandupController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Standup> deleteStandup(@PathVariable long id) {
+    public ResponseEntity<Void> deleteStandup(@PathVariable long id) {
         try {
-            Standup standup = standupService.deleteStandup(id);
-            return new ResponseEntity<>(standup, HttpStatus.OK);
+            standupService.deleteStandup(id);
+            return ResponseEntity.noContent().build();
         }
         catch (EntityNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

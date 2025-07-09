@@ -1,6 +1,5 @@
 package com.teamsync.teamsync.dto;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,13 +8,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserUpdateDTO {
+public class StandupUpdateDTO {
 
     @NotBlank
-    private String fullName;
+    private String yesterday;
 
-    @NotBlank(message = "Email must not be blank")
-    @Email(message = "Email should be valid")
-    private String email;
+    @NotBlank
+    private String today;
 
+    private String blockers;
 }
