@@ -44,7 +44,7 @@ public class StandupController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<StandupDTO> updateStandup(@PathVariable long id, @RequestBody @Valid StandupUpdateDTO standup) {
         try {
             StandupDTO updated = standupService.updateStandup(id, standup);

@@ -4,8 +4,9 @@ import com.teamsync.teamsync.dto.UserCreateDTO;
 import com.teamsync.teamsync.dto.UserDTO;
 import com.teamsync.teamsync.dto.UserUpdateDTO;
 import com.teamsync.teamsync.entity.User;
+import com.teamsync.teamsync.exception.BadRequestException;
+import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,14 +24,16 @@ public class UserService {
 
     public UserDTO createUser(UserCreateDTO userDTO) {
         if (userRepository.existsByEmail((userDTO.getEmail()))) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new BadRequestException("Email already exists");
         }
 
         User user = new User();
         user.setFullName(userDTO.getFullName());
         user.setEmail(userDTO.getEmail());
         user.setRole(userDTO.getRole());
-        user.setTeam(teamService.getTeamEntityById(userDTO.getTeamId()));
+        if (userDTO.getTeamId() != null) {
+            user.setTeam(teamService.getTeamEntityById(userDTO.getTeamId()));
+        }
 
         User savedUser = userRepository.save(user);
         return convertUserToDTO(savedUser);
@@ -45,7 +48,7 @@ public class UserService {
 
     public User getUserEntityById(long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with \"id: " + id + "\" not found"));
     }
 
     public UserDTO getUserById(Long id) {
@@ -60,6 +63,9 @@ public class UserService {
         }
         if (user.getEmail() != null) {
             updateUser.setEmail(user.getEmail());
+        }
+        if (user.getTeamId() != null) {
+            updateUser.setTeam(teamService.getTeamEntityById(user.getTeamId()));
         }
         return convertUserToDTO(userRepository.save(updateUser));
     }

@@ -5,8 +5,8 @@ import com.teamsync.teamsync.dto.TeamDTO;
 import com.teamsync.teamsync.dto.TeamUpdateDTO;
 import com.teamsync.teamsync.entity.Team;
 import com.teamsync.teamsync.entity.User;
+import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.TeamRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,7 +38,7 @@ public class TeamService {
 
     public Team getTeamEntityById(Long id) {
         return teamRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Team with \"id: " + id +"\" not found"));
     }
 
     public TeamDTO getTeamById(Long id) {
@@ -47,8 +47,7 @@ public class TeamService {
     }
 
     public TeamDTO updateTeam(Long id, TeamUpdateDTO team) {
-        Team updatedTeam = teamRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Team with id " + id + " not found"));
+        Team updatedTeam = getTeamEntityById(id);
 
         if (team.getName() != null) {
             updatedTeam.setName(team.getName());
@@ -65,9 +64,8 @@ public class TeamService {
     }
 
     public void deleteTeam(Long id) {
-        Team team = teamRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Team with id " + id + " not found"));
-        teamRepository.delete(team);
+        getTeamEntityById(id);
+        teamRepository.deleteById(id);
     }
 
     private TeamDTO convertTeamToDTO(Team team) {
