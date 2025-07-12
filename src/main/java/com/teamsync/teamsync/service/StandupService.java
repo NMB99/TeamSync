@@ -31,6 +31,7 @@ public class StandupService {
         );
         standup.setYesterday(standupDTO.getYesterday());
         standup.setToday(standupDTO.getToday());
+        standup.setBlockers(standupDTO.getBlockers());
         standup.setUser(userService.getUserEntityById(standupDTO.getUserId()));
         standup.setTeam(teamService.getTeamEntityById(standupDTO.getTeamId()));
         return convertStandupToDTO(standupRepository.save(standup));
@@ -52,9 +53,15 @@ public class StandupService {
         Standup exists = standupRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Standup with id " + id + " not found"));
 
-        exists.setYesterday(standup.getYesterday());
-        exists.setToday(standup.getToday());
-        exists.setBlockers(standup.getBlockers());
+        if (standup.getYesterday() != null) {
+            exists.setYesterday(standup.getYesterday());
+        }
+        if (standup.getToday() != null) {
+            exists.setToday(standup.getToday());
+        }
+        if (standup.getBlockers() != null) {
+            exists.setBlockers(standup.getBlockers());
+        }
         standupRepository.save(exists);
 
         return convertStandupToDTO(exists);

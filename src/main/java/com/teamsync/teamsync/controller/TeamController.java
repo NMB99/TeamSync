@@ -45,7 +45,7 @@ public class TeamController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<TeamDTO> updateTeam(@PathVariable Long id, @RequestBody @Valid TeamUpdateDTO team) {
         try {
             return ResponseEntity.ok(teamService.updateTeam(id, team));

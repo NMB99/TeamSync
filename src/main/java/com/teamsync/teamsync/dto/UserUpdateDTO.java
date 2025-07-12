@@ -11,11 +11,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserUpdateDTO {
 
-    @NotBlank
     private String fullName;
-
-    @NotBlank(message = "Email must not be blank")
-    @Email(message = "Email should be valid")
     private String email;
+    private Long teamId;
 
 }

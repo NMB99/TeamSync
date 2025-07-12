@@ -10,11 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class StandupUpdateDTO {
 
-    @NotBlank
     private String yesterday;
-
-    @NotBlank
     private String today;
-
     private String blockers;
+
 }

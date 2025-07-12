@@ -21,6 +21,8 @@ public class StandupCreateDTO {
     @NotBlank
     private String today;
 
+    private String blockers;
+
     @NotNull
     private Long userId;
 
