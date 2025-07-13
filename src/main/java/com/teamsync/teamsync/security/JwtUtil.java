@@ -28,4 +28,26 @@ public class JwtUtil {
                         .signWith(SignatureAlgorithm.HS512, jwtSecret)
                         .compact();
     }
+
+    public String extractUsername(String token) {
+        return
+                Jwts.parser()
+                        .setSigningKey(jwtSecret)
+                        .parseClaimsJws(token)
+                        .getBody()
+                        .getSubject();
+    }
+
+    public Date extractExpiration(String token) {
+        return
+                Jwts.parser()
+                        .setSigningKey(jwtSecret)
+                        .parseClaimsJws(token)
+                        .getBody()
+                        .getExpiration();
+    }
+
+    public boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
 }
