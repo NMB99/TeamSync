@@ -28,5 +28,4 @@ public class JwtUtil {
                         .signWith(SignatureAlgorithm.HS512, jwtSecret)
                         .compact();
     }
-
 }
