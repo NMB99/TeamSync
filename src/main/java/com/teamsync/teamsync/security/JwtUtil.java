@@ -2,6 +2,7 @@ package com.teamsync.teamsync.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +18,7 @@ public class JwtUtil {
     private String jwtSecret;
 
     @Value("${jwt.expiration}")
-    private String jwtExpirationMs;
+    private long jwtExpirationMs;
 
     public String generateToken(UserDetails userDetails) {
         return
@@ -25,14 +26,15 @@ public class JwtUtil {
                         .setSubject(userDetails.getUsername())
                         .setIssuedAt(new Date())
                         .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                        .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                        .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()), SignatureAlgorithm.HS512)
                         .compact();
     }
 
     public String extractUsername(String token) {
         return
-                Jwts.parser()
-                        .setSigningKey(jwtSecret)
+                Jwts.parserBuilder()
+                        .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                        .build()
                         .parseClaimsJws(token)
                         .getBody()
                         .getSubject();
@@ -40,8 +42,9 @@ public class JwtUtil {
 
     public Date extractExpiration(String token) {
         return
-                Jwts.parser()
-                        .setSigningKey(jwtSecret)
+                Jwts.parserBuilder()
+                        .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                        .build()
                         .parseClaimsJws(token)
                         .getBody()
                         .getExpiration();
