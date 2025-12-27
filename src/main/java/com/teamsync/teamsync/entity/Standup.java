@@ -1,6 +1,7 @@
 package com.teamsync.teamsync.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,10 +23,14 @@ public class Standup {
     private String today;
     private String blockers;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    @NotNull
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "team_id", nullable = false)
+    @NotNull
     private Team team;
 
 }

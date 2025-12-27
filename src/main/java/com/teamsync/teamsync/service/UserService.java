@@ -7,6 +7,8 @@ import com.teamsync.teamsync.entity.User;
 import com.teamsync.teamsync.exception.BadRequestException;
 import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.UserRepository;
+import com.teamsync.teamsync.util.PasswordUtil;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,10 +18,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final TeamService teamService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, TeamService teamService) {
+    public UserService(UserRepository userRepository, TeamService teamService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.teamService = teamService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UserDTO createUser(UserCreateDTO userDTO) {
@@ -31,6 +35,13 @@ public class UserService {
         user.setFullName(userDTO.getFullName());
         user.setEmail(userDTO.getEmail());
         user.setRole(userDTO.getRole());
+
+        String password = PasswordUtil.generateRandomPassword();
+        String encodedPassword = passwordEncoder.encode(password);
+
+        System.out.println("Password: " + password);
+        user.setPassword(encodedPassword);
+
         if (userDTO.getTeamId() != null) {
             user.setTeam(teamService.getTeamEntityById(userDTO.getTeamId()));
         }
@@ -46,7 +57,7 @@ public class UserService {
                 .toList();
     }
 
-    public User getUserEntityById(long id) {
+    public User getUserEntityById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with \"id: " + id + "\" not found"));
     }
