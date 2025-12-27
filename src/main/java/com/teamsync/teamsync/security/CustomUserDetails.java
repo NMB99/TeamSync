@@ -1,6 +1,8 @@
 package com.teamsync.teamsync.security;
 
+import com.teamsync.teamsync.entity.Team;
 import com.teamsync.teamsync.entity.User;
+import com.teamsync.teamsync.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,24 +16,32 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDetailsImpl implements UserDetails {
+public class CustomUserDetails implements UserDetails {
 
     private Long id;
     private String email;
     private String password;
+    private String role;
+    private Team team;
     private Collection<? extends GrantedAuthority> authorities;
 
-    public static UserDetailsImpl build(User user) {
+    public static CustomUserDetails build(User user) {
         List<GrantedAuthority> authorities = List.of(
-                new SimpleGrantedAuthority(user.getRole().name())
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
         );
 
-        return new UserDetailsImpl(
+        return new CustomUserDetails(
                 user.getId(),
                 user.getEmail(),
                 user.getPassword(),
+                user.getRole().name(),
+                user.getTeam() != null ? user.getTeam() : null,
                 authorities
         );
+    }
+
+    public Role getRoleEnum() {
+        return Role.valueOf(this.role);
     }
 
     @Override

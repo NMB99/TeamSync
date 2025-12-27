@@ -13,8 +13,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class StandupCreateDTO {
 
-    private LocalDate date;
-
     @NotBlank
     private String yesterday;
 
@@ -22,11 +20,5 @@ public class StandupCreateDTO {
     private String today;
 
     private String blockers;
-
-    @NotNull
-    private Long userId;
-
-    @NotNull
-    private Long teamId;
 
 }
