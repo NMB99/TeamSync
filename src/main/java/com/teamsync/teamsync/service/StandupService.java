@@ -50,9 +50,10 @@ public class StandupService {
                 .getPrincipal();
 
         Long userId = currentUser.getId();
-        List<Standup> standups = List.of();
+        Role role = currentUser.getRoleEnum();
+        List<Standup> standups;
 
-        if (currentUser.getRoleEnum() == Role.TEAM_MEMBER) {
+        if (role == Role.TEAM_MEMBER) {
             standups = standupRepository.findByUserId(userId);
         }
         else {
@@ -60,6 +61,8 @@ public class StandupService {
                 standups = standupRepository.findByTeamIdAndDate(teamId.get(), date.get());
             } else if (teamId.isPresent()) {
                 standups = standupRepository.findByTeamId(teamId.get());
+            } else {
+                throw new IllegalArgumentException("team id is required to fetch standups.");
             }
         }
 

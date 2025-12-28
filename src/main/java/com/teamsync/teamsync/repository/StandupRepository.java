@@ -16,4 +16,5 @@ public interface StandupRepository extends JpaRepository<Standup, Long> {
 
     List<Standup> findByTeamId(Long teamId);
 
+    List<Standup> findAllByTeamId(Long teamId);
 }
