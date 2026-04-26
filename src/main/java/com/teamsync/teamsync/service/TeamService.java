@@ -13,6 +13,7 @@ import com.teamsync.teamsync.security.CustomUserDetails;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,10 +22,11 @@ public class TeamService {
 
     private final TeamRepository teamRepository;
 
-    public TeamService(TeamRepository teamRepository, UserRepository userRepository) {
+    public TeamService(TeamRepository teamRepository) {
         this.teamRepository = teamRepository;
     }
 
+    @Transactional
     public TeamDTO createTeam(TeamCreateDTO teamDTO) {
         Team team = new Team();
         team.setName(teamDTO.getName());
@@ -40,10 +42,16 @@ public class TeamService {
                 .getContext()
                 .getAuthentication()
                 .getPrincipal();
-        System.out.println("ROLE: " + currentUser.getRoleEnum());
-        return teamRepository.findAll()
-                .stream().map(this::convertTeamToDTO)
-                .toList();
+        if (currentUser.getRoleEnum() == Role.ADMIN || currentUser.getRoleEnum() == Role.MANAGER) {
+            return teamRepository.findAll()
+                    .stream().map(this::convertTeamToDTO)
+                    .toList();
+        }
+        else {
+            return teamRepository.findById(currentUser.getTeamId())
+                    .stream().map(this::convertTeamToDTO)
+                    .toList();
+        }
     }
 
     public Team getTeamEntityById(Long id) {
@@ -60,7 +68,7 @@ public class TeamService {
         Role role = currentUser.getRoleEnum();
 
         if (role == Role.TEAM_MEMBER || role == Role.TEAM_LEAD) {
-            if (currentUser.getTeam() == null || !currentUser.getTeam().getId().equals(id)) {
+            if (currentUser.getTeamId() == null || !currentUser.getTeamId().equals(id)) {
                 throw new ResourceNotFoundException("Access denied: You can only view your team's information.");
             }
         }
@@ -69,6 +77,7 @@ public class TeamService {
         return convertTeamToDTO(team);
     }
 
+    @Transactional
     public TeamDTO updateTeam(Long id, TeamUpdateDTO team) {
         Team updatedTeam = getTeamEntityById(id);
 
@@ -86,6 +95,7 @@ public class TeamService {
         return convertTeamToDTO(updatedTeam);
     }
 
+    @Transactional
     public void deleteTeam(Long id) {
         getTeamEntityById(id);
         teamRepository.deleteById(id);

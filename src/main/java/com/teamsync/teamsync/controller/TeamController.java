@@ -3,7 +3,6 @@ package com.teamsync.teamsync.controller;
 import com.teamsync.teamsync.dto.TeamCreateDTO;
 import com.teamsync.teamsync.dto.TeamDTO;
 import com.teamsync.teamsync.dto.TeamUpdateDTO;
-import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.service.TeamService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -31,44 +30,29 @@ public class TeamController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TeamDTO>> getAllTeams() {
         return ResponseEntity.ok(teamService.getAllTeams());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'TEAM_LEAD', 'TEAM_MEMBER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TeamDTO> getTeamById(@PathVariable Long id) {
-        try {
-            TeamDTO team = teamService.getTeamById(id);
-            return ResponseEntity.ok(team);
-        }
-        catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        TeamDTO team = teamService.getTeamById(id);
+        return ResponseEntity.ok(team);
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<TeamDTO> updateTeam(@PathVariable Long id, @RequestBody @Valid TeamUpdateDTO team) {
-        try {
-            return ResponseEntity.ok(teamService.updateTeam(id, team));
-        }
-        catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(teamService.updateTeam(id, team));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteTeam(@PathVariable Long id) {
-        try {
-            teamService.deleteTeam(id);
-            return ResponseEntity.noContent().build();
-        }
-        catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        teamService.deleteTeam(id);
+        return ResponseEntity.noContent().build();
     }
   
 }

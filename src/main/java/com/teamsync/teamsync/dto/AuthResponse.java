@@ -1,5 +1,6 @@
 package com.teamsync.teamsync.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
@@ -7,7 +8,9 @@ public class AuthResponse {
 
     private String token;
     private String role;
-    private String token_type = "Bearer";
+
+    @JsonProperty("token_type")
+    private String tokenType = "Bearer";
 
 
     public AuthResponse(String token, String role) {

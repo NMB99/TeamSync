@@ -4,12 +4,16 @@ import com.teamsync.teamsync.dto.UserCreateDTO;
 import com.teamsync.teamsync.dto.UserDTO;
 import com.teamsync.teamsync.dto.UserUpdateDTO;
 import com.teamsync.teamsync.entity.User;
+import com.teamsync.teamsync.enums.Role;
 import com.teamsync.teamsync.exception.BadRequestException;
 import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.UserRepository;
+import com.teamsync.teamsync.security.CustomUserDetails;
 import com.teamsync.teamsync.util.PasswordUtil;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,6 +30,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public UserDTO createUser(UserCreateDTO userDTO) {
         if (userRepository.existsByEmail((userDTO.getEmail()))) {
             throw new BadRequestException("Email already exists");
@@ -51,7 +56,19 @@ public class UserService {
     }
 
     public List<UserDTO> getAllUsers() {
-        List<User> users = userRepository.findAll();
+        CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        List<User> users;
+        if (currentUser.getRoleEnum() == Role.ADMIN || currentUser.getRoleEnum() == Role.MANAGER) {
+            users = userRepository.findAll();
+        }
+        else {
+            users = userRepository.findByTeamId(currentUser.getTeamId());
+        }
+
         return users.stream()
                 .map(this::convertUserToDTO)
                 .toList();
@@ -67,6 +84,7 @@ public class UserService {
         return convertUserToDTO(user);
     }
 
+    @Transactional
     public UserDTO updateUser(Long id, UserUpdateDTO user) {
         User updateUser = getUserEntityById(id);
         if (user.getFullName() != null) {
@@ -81,6 +99,7 @@ public class UserService {
         return convertUserToDTO(userRepository.save(updateUser));
     }
 
+    @Transactional
     public void deleteUser(Long id) {
         getUserEntityById(id);
         userRepository.deleteById(id);

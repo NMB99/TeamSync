@@ -1,6 +1,5 @@
 package com.teamsync.teamsync.security;
 
-import com.teamsync.teamsync.entity.Team;
 import com.teamsync.teamsync.entity.User;
 import com.teamsync.teamsync.enums.Role;
 import lombok.AllArgsConstructor;
@@ -22,7 +21,7 @@ public class CustomUserDetails implements UserDetails {
     private String email;
     private String password;
     private String role;
-    private Team team;
+    private Long teamId;
     private Collection<? extends GrantedAuthority> authorities;
 
     public static CustomUserDetails build(User user) {
@@ -35,7 +34,7 @@ public class CustomUserDetails implements UserDetails {
                 user.getEmail(),
                 user.getPassword(),
                 user.getRole().name(),
-                user.getTeam() != null ? user.getTeam() : null,
+                user.getTeam() != null ? user.getTeam().getId() : null,
                 authorities
         );
     }
