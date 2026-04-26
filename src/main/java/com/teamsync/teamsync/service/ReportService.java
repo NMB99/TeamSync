@@ -4,9 +4,10 @@ import com.teamsync.teamsync.dto.ReportDTO;
 import com.teamsync.teamsync.entity.Standup;
 import com.teamsync.teamsync.repository.StandupRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ReportService {
@@ -17,11 +18,20 @@ public class ReportService {
         this.standupRepository = standupRepository;
     }
 
-    public List<ReportDTO> getReportByTeam_Id(long teamId) {
-        List<Standup> standups = standupRepository.findAllByTeamId(teamId);
+    @Transactional(readOnly = true)
+    public List<ReportDTO> getReportByTeamId(long teamId, LocalDate startDate, LocalDate endDate) {
+        List<Standup> standups;
+
+        if (startDate != null && endDate != null) {
+            standups = standupRepository.findByTeamIdAndDateBetween(teamId, startDate, endDate);
+        }
+        else {
+            standups = standupRepository.findByTeamId(teamId);
+        }
+
         return standups.stream()
                 .map(this::convertToReportDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private ReportDTO convertToReportDTO(Standup standup) {

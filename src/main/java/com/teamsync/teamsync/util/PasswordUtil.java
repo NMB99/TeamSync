@@ -4,15 +4,15 @@ import java.security.SecureRandom;
 
 public class PasswordUtil {
 
-    private static final String Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&";
-    private static final int password_Length = 10;
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&";
+    private static final int PASSWORD_LENGTH = 12;
     private static final SecureRandom random = new SecureRandom();
 
     public static String generateRandomPassword() {
-        StringBuilder password = new StringBuilder(password_Length);
-        for (int i = 0; i < password_Length; i++) {
-            int idx = random.nextInt(Characters.length());
-            password.append(Characters.charAt(idx));
+        StringBuilder password = new StringBuilder(PASSWORD_LENGTH);
+        for (int i = 0; i < PASSWORD_LENGTH; i++) {
+            int idx = random.nextInt(CHARACTERS.length());
+            password.append(CHARACTERS.charAt(idx));
         }
         return password.toString();
     }

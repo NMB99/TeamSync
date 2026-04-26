@@ -4,6 +4,7 @@ import com.teamsync.teamsync.dto.StandupCreateDTO;
 import com.teamsync.teamsync.dto.StandupDTO;
 import com.teamsync.teamsync.dto.StandupUpdateDTO;
 import com.teamsync.teamsync.entity.Standup;
+import com.teamsync.teamsync.entity.Team;
 import com.teamsync.teamsync.enums.Role;
 import com.teamsync.teamsync.exception.BadRequestException;
 import com.teamsync.teamsync.exception.ResourceNotFoundException;
@@ -11,22 +12,26 @@ import com.teamsync.teamsync.repository.StandupRepository;
 import com.teamsync.teamsync.security.CustomUserDetails;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
 public class StandupService {
 
     private final StandupRepository standupRepository;
     private final UserService userService;
+    private final TeamService teamService;
 
-    public StandupService(StandupRepository standupRepository, UserService userService) {
+    public StandupService(StandupRepository standupRepository, UserService userService, TeamService teamService) {
         this.standupRepository = standupRepository;
         this.userService = userService;
+        this.teamService = teamService;
     }
 
+    @Transactional
     public StandupDTO createStandup(StandupCreateDTO standupDTO) {
         CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
                 .getContext()
@@ -39,11 +44,13 @@ public class StandupService {
         standup.setToday(standupDTO.getToday());
         standup.setBlockers(standupDTO.getBlockers());
         standup.setUser(userService.getUserEntityById(currentUser.getId()));
-        standup.setTeam(currentUser.getTeam());
+
+        Team team = teamService.getTeamEntityById(currentUser.getTeamId());
+        standup.setTeam(team);
         return convertStandupToDTO(standupRepository.save(standup));
     }
 
-    public List<StandupDTO> getAllStandups(Optional<Long> teamId, Optional<LocalDate> date) {
+    public List<StandupDTO> getAllStandups(Long teamId, LocalDate date) {
         CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
                 .getContext()
                 .getAuthentication()
@@ -57,10 +64,10 @@ public class StandupService {
             standups = standupRepository.findByUserId(userId);
         }
         else {
-            if (teamId.isPresent() && date.isPresent()) {
-                standups = standupRepository.findByTeamIdAndDate(teamId.get(), date.get());
-            } else if (teamId.isPresent()) {
-                standups = standupRepository.findByTeamId(teamId.get());
+            if (teamId != null && date != null) {
+                standups = standupRepository.findByTeamIdAndDate(teamId, date);
+            } else if (teamId != null) {
+                standups = standupRepository.findByTeamId(teamId);
             } else {
                 throw new IllegalArgumentException("team id is required to fetch standups.");
             }
@@ -87,6 +94,7 @@ public class StandupService {
         return convertStandupToDTO(standup);
     }
 
+    @Transactional
     public StandupDTO updateStandup(Long id, StandupUpdateDTO standup) {
         CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
                 .getContext()
@@ -116,6 +124,7 @@ public class StandupService {
         return convertStandupToDTO(exists);
     }
 
+    @Transactional
     public void deleteStandup(Long id) {
         CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
                 .getContext()
