@@ -96,6 +96,9 @@ public class UserService {
         if (user.getTeamId() != null) {
             updateUser.setTeam(teamService.getTeamEntityById(user.getTeamId()));
         }
+        if (user.getRole() != null) {
+            updateUser.setRole(user.getRole());
+        }
         return convertUserToDTO(userRepository.save(updateUser));
     }
 
