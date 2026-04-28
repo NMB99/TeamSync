@@ -104,8 +104,8 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
-        getUserEntityById(id);
-        userRepository.deleteById(id);
+        User user = getUserEntityById(id);
+        userRepository.delete(user);
     }
 
     private UserDTO convertUserToDTO(User user) {

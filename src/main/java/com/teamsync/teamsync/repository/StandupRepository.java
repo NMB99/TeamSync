@@ -18,4 +18,5 @@ public interface StandupRepository extends JpaRepository<Standup, Long> {
 
     List<Standup> findByTeamIdAndDateBetween(Long teamId, LocalDate dateAfter, LocalDate dateBefore);
 
+    List<Standup> findByUserIdAndDate(Long userId, LocalDate date);
 }

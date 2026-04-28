@@ -12,6 +12,7 @@ import com.teamsync.teamsync.repository.UserRepository;
 import com.teamsync.teamsync.security.CustomUserDetails;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -189,7 +190,6 @@ class UserServiceTest {
         user3.setFullName("Sophie Best");
         user3.setEmail("sophie.best@test.com");
         user3.setRole(Role.MANAGER);
-
         user3.setTeam(team);
 
         when(userRepository.findByTeamId(teamId)).thenReturn(List.of(user1, user2, user3));
@@ -251,13 +251,18 @@ class UserServiceTest {
 
         User savedUser = new User();
         savedUser.setId(userId);
-        savedUser.setFullName(updateDTO.getFullName());
+        savedUser.setFullName("Alex Mark");
         savedUser.setRole(Role.TEAM_MEMBER);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(savedUser));
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
         UserDTO result = userService.updateUser(userId, updateDTO);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User updatedUser = captor.getValue();
+        assertEquals("Alexa Mark", updatedUser.getFullName());
 
         assertNotNull(result);
         assertEquals(userId, result.getId());
@@ -288,7 +293,7 @@ class UserServiceTest {
 
         userService.deleteUser(userId);
 
-        verify(userRepository).deleteById(userId);
+        verify(userRepository).delete(user);
     }
 
     @Test
