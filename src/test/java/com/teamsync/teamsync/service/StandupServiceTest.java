@@ -7,7 +7,6 @@ import com.teamsync.teamsync.entity.Standup;
 import com.teamsync.teamsync.entity.Team;
 import com.teamsync.teamsync.entity.User;
 import com.teamsync.teamsync.enums.Role;
-import com.teamsync.teamsync.exception.BadRequestException;
 import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.StandupRepository;
 import com.teamsync.teamsync.security.CustomUserDetails;
@@ -17,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -246,7 +246,7 @@ class StandupServiceTest {
 
         setSecurityContext(Role.ADMIN, userId, teamId);
 
-        assertThrows(BadRequestException.class, () -> {
+        assertThrows(AccessDeniedException.class, () -> {
             standupService.getAllStandups(null);
         });
     }
@@ -393,7 +393,7 @@ class StandupServiceTest {
 
         when(standupRepository.findById(1L)).thenReturn(Optional.of(standup));
 
-        assertThrows(BadRequestException.class, () -> {
+        assertThrows(AccessDeniedException.class, () -> {
             standupService.getStandupById(1L);
         });
     }
@@ -528,7 +528,7 @@ class StandupServiceTest {
 
         when(standupRepository.findById(standupId)).thenReturn(Optional.of(standup));
 
-        assertThrows(BadRequestException.class, () -> {
+        assertThrows(AccessDeniedException.class, () -> {
             standupService.updateStandup(standupId, updateStandupDto);
         });
     }
@@ -602,7 +602,7 @@ class StandupServiceTest {
 
         when(standupRepository.findById(standupId)).thenReturn(Optional.of(standup));
 
-        assertThrows(BadRequestException.class, () -> {
+        assertThrows(AccessDeniedException.class, () -> {
             standupService.deleteStandup(standupId);
         });
     }

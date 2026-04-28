@@ -8,9 +8,8 @@ import com.teamsync.teamsync.entity.User;
 import com.teamsync.teamsync.enums.Role;
 import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.TeamRepository;
-import com.teamsync.teamsync.repository.UserRepository;
 import com.teamsync.teamsync.security.CustomUserDetails;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +41,12 @@ public class TeamService {
                 .getContext()
                 .getAuthentication()
                 .getPrincipal();
-        if (currentUser.getRoleEnum() == Role.ADMIN || currentUser.getRoleEnum() == Role.MANAGER) {
+
+        if (currentUser.getRoleEnum() == Role.ADMIN) {
+            throw new AccessDeniedException("Access denied.");
+        }
+
+        if (currentUser.getRoleEnum() == Role.MANAGER) {
             return teamRepository.findAll()
                     .stream().map(this::convertTeamToDTO)
                     .toList();

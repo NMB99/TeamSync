@@ -10,6 +10,7 @@ import com.teamsync.teamsync.exception.BadRequestException;
 import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.StandupRepository;
 import com.teamsync.teamsync.security.CustomUserDetails;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,7 +73,7 @@ public class StandupService {
             }
         }
         else {
-            throw new BadRequestException("Access denied!.");
+            throw new AccessDeniedException("Access denied!.");
         }
 
         return standups.stream().map(this::convertStandupToDTO).toList();
@@ -87,10 +88,10 @@ public class StandupService {
                 );
 
         if (currentUser.getRoleEnum() == Role.TEAM_MEMBER && !standup.getUser().getId().equals(currentUser.getId())) {
-            throw new BadRequestException("You can only view your own standups.");
+            throw new AccessDeniedException("You can only view your own standups.");
         }
         if ((currentUser.getRoleEnum() == Role.TEAM_LEAD || currentUser.getRoleEnum() == Role.MANAGER) && !standup.getTeam().getId().equals(currentUser.getTeamId())) {
-            throw new BadRequestException("You can only view your team's standups.");
+            throw new AccessDeniedException("You can only view your team's standups.");
         }
 
         return convertStandupToDTO(standup);
@@ -106,7 +107,7 @@ public class StandupService {
                 );
 
         if (!exists.getUser().getId().equals(currentUser.getId())) {
-            throw new BadRequestException("You can only update your own standups.");
+            throw new AccessDeniedException("You can only update your own standups.");
         }
 
         if (standup.getYesterday() != null) {
@@ -133,7 +134,7 @@ public class StandupService {
                 );
 
         if (!standup.getUser().getId().equals(currentUser.getId())) {
-            throw new BadRequestException("You can only delete your own standups.");
+            throw new AccessDeniedException("You can only delete your own standups.");
         }
 
         standupRepository.delete(standup);
