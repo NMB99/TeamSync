@@ -27,8 +27,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -69,9 +68,21 @@ class UserServiceTest {
         when(userRepository.existsByEmail(newUser.getEmail())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         when(teamService.getTeamEntityById(newUser.getTeamId())).thenReturn(team);
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         UserDTO result = userService.createUser(newUser);
+
+        verify(userRepository).existsByEmail(newUser.getEmail());
+        verify(passwordEncoder).encode(anyString());
+        verify(teamService).getTeamEntityById(newUser.getTeamId());
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User user = captor.getValue();
+        assertEquals(newUser.getFullName(), user.getFullName());
+        assertEquals(newUser.getEmail(), user.getEmail());
+        assertEquals(newUser.getRole(), user.getRole());
 
         assertNotNull(result);
         assertEquals("Alex Mark", result.getFullName());
@@ -92,6 +103,9 @@ class UserServiceTest {
         assertThrows(BadRequestException.class, () -> {
             userService.createUser(newUser);
         });
+
+        verify(userRepository).existsByEmail(newUser.getEmail());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
@@ -121,8 +135,13 @@ class UserServiceTest {
 
         List<UserDTO> result = userService.getAllUsers();
 
+        verify(userRepository).findAll();
+
         assertNotNull(result);
         assertEquals(3, result.size());
+        assertEquals("Alex Mark", result.get(0).getFullName());
+        assertEquals("David Rolo", result.get(1).getFullName());
+        assertEquals("Sophie Best", result.get(2).getFullName());
 
         SecurityContextHolder.clearContext();
     }
@@ -154,8 +173,13 @@ class UserServiceTest {
 
         List<UserDTO> result = userService.getAllUsers();
 
+        verify(userRepository).findAll();
+
         assertNotNull(result);
         assertEquals(3, result.size());
+        assertEquals("Alex Mark", result.get(0).getFullName());
+        assertEquals("David Rolo", result.get(1).getFullName());
+        assertEquals("Sophie Best", result.get(2).getFullName());
 
         SecurityContextHolder.clearContext();
     }
@@ -196,17 +220,15 @@ class UserServiceTest {
 
         List<UserDTO> result = userService.getAllUsers();
 
+        verify(userRepository).findByTeamId(teamId);
+
         assertNotNull(result);
         assertEquals(3, result.size());
+        assertEquals("Alex Mark", result.get(0).getFullName());
+        assertEquals("David Rolo", result.get(1).getFullName());
+        assertEquals("Sophie Best", result.get(2).getFullName());
 
         SecurityContextHolder.clearContext();
-    }
-
-    /*
-        Same as getUserById. Also, it is indirectly tested.
-     */
-    @Test
-    void getUserEntityById() {
     }
 
     @Test
@@ -224,9 +246,12 @@ class UserServiceTest {
 
         UserDTO result = userService.getUserById(userId);
 
+        verify(userRepository).findById(userId);
+
         assertNotNull(result);
         assertEquals(userId, result.getId());
         assertEquals("Alex Mark", result.getFullName());
+        assertEquals("alex.mark@test.com",  result.getEmail());
     }
 
     @Test
@@ -239,6 +264,8 @@ class UserServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> {
             userService.getUserById(1L);
         });
+
+        verify(userRepository).findById(userId);
     }
 
     @Test
@@ -255,18 +282,21 @@ class UserServiceTest {
         savedUser.setRole(Role.TEAM_MEMBER);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(savedUser));
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         UserDTO result = userService.updateUser(userId, updateDTO);
+
+        verify(userRepository).findById(userId);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
         User updatedUser = captor.getValue();
-        assertEquals("Alexa Mark", updatedUser.getFullName());
+        assertEquals(updateDTO.getFullName(), updatedUser.getFullName());
 
         assertNotNull(result);
         assertEquals(userId, result.getId());
-        assertEquals("Alexa Mark", result.getFullName());
+        assertEquals(updateDTO.getFullName(), result.getFullName());
     }
 
     @Test
@@ -279,6 +309,9 @@ class UserServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> {
             userService.updateUser(userId, new UserUpdateDTO());
         });
+
+        verify(userRepository).findById(userId);
+        verify(userRepository, never()).save(any());
     }
 
     @Test
@@ -293,7 +326,9 @@ class UserServiceTest {
 
         userService.deleteUser(userId);
 
+        verify(userRepository).findById(userId);
         verify(userRepository).delete(user);
+        verify(userRepository, never()).save(any());
     }
 
     @Test
@@ -306,6 +341,10 @@ class UserServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> {
             userService.deleteUser(userId);
         });
+
+        verify(userRepository).findById(userId);
+        verify(userRepository, never()).delete(any());
+        verify(userRepository, never()).save(any());
     }
 
     private void setSecurityContext(Role role, Long teamId) {

@@ -27,8 +27,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class StandupServiceTest {
@@ -65,25 +64,34 @@ class StandupServiceTest {
         Team team = new Team();
         team.setId(teamId);
 
-        Standup savedStandup = new Standup();
-        savedStandup.setId(1L);
-        savedStandup.setYesterday(newStandup.getYesterday());
-        savedStandup.setToday(newStandup.getToday());
-        savedStandup.setBlockers(newStandup.getBlockers());
-        savedStandup.setUser(user);
-        savedStandup.setTeam(team);
-
         when(userService.getUserEntityById(userId)).thenReturn(user);
         when(teamService.getTeamEntityById(teamId)).thenReturn(team);
-        when(standupRepository.save(any(Standup.class))).thenReturn(savedStandup);
+        when(standupRepository.save(any(Standup.class)))
+                .thenAnswer(invocation -> {
+                    Standup s = invocation.getArgument(0);
+                    s.setId(1L);
+                    return s;
+                });
 
         StandupDTO result = standupService.createStandup(newStandup);
+
+        verify(userService).getUserEntityById(userId);
+        verify(teamService).getTeamEntityById(teamId);
+
+        ArgumentCaptor<Standup> captor = ArgumentCaptor.forClass(Standup.class);
+        verify(standupRepository).save(captor.capture());
+        Standup savedStandup = captor.getValue();
+        assertEquals(newStandup.getYesterday(), savedStandup.getYesterday());
+        assertEquals(newStandup.getToday(), savedStandup.getToday());
+        assertEquals(newStandup.getBlockers(), savedStandup.getBlockers());
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals(newStandup.getYesterday(), result.getYesterday());
         assertEquals(newStandup.getToday(), result.getToday());
         assertEquals(newStandup.getBlockers(), result.getBlockers());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -98,6 +106,11 @@ class StandupServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> {
             standupService.createStandup(new StandupCreateDTO());
         });
+
+        verify(userService).getUserEntityById(userId);
+        verify(standupRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -136,10 +149,14 @@ class StandupServiceTest {
 
         List<StandupDTO> result = standupService.getAllStandups(null);
 
+        verify(standupRepository).findByUserId(userId);
+
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(1L, result.get(0).getId());
         assertEquals(2L, result.get(1).getId());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -182,10 +199,14 @@ class StandupServiceTest {
 
         List<StandupDTO> result = standupService.getAllStandups(null);
 
+        verify(standupRepository).findByTeamId(teamId);
+
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(1L, result.get(0).getId());
         assertEquals(2L, result.get(1).getId());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -232,10 +253,14 @@ class StandupServiceTest {
 
         List<StandupDTO> result = standupService.getAllStandups(null);
 
+        verify(standupRepository).findByTeamId(teamId);
+
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(2L, result.get(0).getId());
         assertEquals(3L, result.get(1).getId());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -249,6 +274,10 @@ class StandupServiceTest {
         assertThrows(AccessDeniedException.class, () -> {
             standupService.getAllStandups(null);
         });
+
+        verifyNoInteractions(standupRepository);
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -279,9 +308,13 @@ class StandupServiceTest {
 
         List<StandupDTO> result = standupService.getAllStandups(LocalDate.now());
 
+        verify(standupRepository).findByUserIdAndDate(userId, LocalDate.now());
+
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(1L, result.get(0).getId());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -326,10 +359,14 @@ class StandupServiceTest {
 
         List<StandupDTO> result = standupService.getAllStandups(LocalDate.now());
 
+        verify(standupRepository).findByTeamIdAndDate(teamId, LocalDate.now());
+
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(1L, result.get(0).getId());
         assertEquals(2L, result.get(1).getId());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -359,6 +396,8 @@ class StandupServiceTest {
 
         StandupDTO result = standupService.getStandupById(1L);
 
+        verify(standupRepository).findById(1L);
+
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("Yesterday", result.getYesterday());
@@ -366,6 +405,8 @@ class StandupServiceTest {
         assertEquals("Blockers", result.getBlockers());
         assertEquals(userId, result.getUserId());
         assertEquals(teamId, result.getTeamId());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -396,6 +437,10 @@ class StandupServiceTest {
         assertThrows(AccessDeniedException.class, () -> {
             standupService.getStandupById(1L);
         });
+
+        verify(standupRepository).findById(1L);
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -426,6 +471,8 @@ class StandupServiceTest {
 
         StandupDTO result = standupService.getStandupById(1L);
 
+        verify(standupRepository).findById(1L);
+
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("Yesterday", result.getYesterday());
@@ -434,6 +481,8 @@ class StandupServiceTest {
         assertEquals(userId2, result.getUserId());
         assertNotEquals(userId1, result.getUserId());
         assertEquals(teamId, result.getTeamId());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -448,6 +497,10 @@ class StandupServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> {
             standupService.getStandupById(1L);
         });
+
+        verify(standupRepository).findById(1L);
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -480,25 +533,30 @@ class StandupServiceTest {
         standup.setTeam(team);
 
         when(standupRepository.findById(standupId)).thenReturn(Optional.of(standup));
-        when(standupRepository.save(any(Standup.class))).thenReturn(standup);
+        when(standupRepository.save(any(Standup.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         StandupDTO result = standupService.updateStandup(standupId, updateStandupDto);
+
+        verify(standupRepository).findById(standupId);
 
         ArgumentCaptor<Standup> captor = ArgumentCaptor.forClass(Standup.class);
         verify(standupRepository).save(captor.capture());
         Standup updatedStandup = captor.getValue();
         assertEquals(standupId, updatedStandup.getId());
-        assertEquals("Updated Yesterday", updatedStandup.getYesterday());
-        assertEquals("Updated Today", updatedStandup.getToday());
-        assertEquals("Updated Blockers", updatedStandup.getBlockers());
+        assertEquals(updateStandupDto.getYesterday(), updatedStandup.getYesterday());
+        assertEquals(updateStandupDto.getToday(), updatedStandup.getToday());
+        assertEquals(updateStandupDto.getBlockers(), updatedStandup.getBlockers());
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
-        assertEquals("Updated Yesterday", result.getYesterday());
-        assertEquals("Updated Today", result.getToday());
-        assertEquals("Updated Blockers", result.getBlockers());
+        assertEquals(updateStandupDto.getYesterday(), result.getYesterday());
+        assertEquals(updateStandupDto.getToday(), result.getToday());
+        assertEquals(updateStandupDto.getBlockers(), result.getBlockers());
         assertEquals(userId, result.getUserId());
         assertEquals(teamId, result.getTeamId());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -531,6 +589,11 @@ class StandupServiceTest {
         assertThrows(AccessDeniedException.class, () -> {
             standupService.updateStandup(standupId, updateStandupDto);
         });
+
+        verify(standupRepository).findById(standupId);
+        verify(standupRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -547,6 +610,11 @@ class StandupServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> {
             standupService.updateStandup(standupId, new StandupUpdateDTO());
         });
+
+        verify(standupRepository).findById(standupId);
+        verify(standupRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -577,7 +645,11 @@ class StandupServiceTest {
 
         standupService.deleteStandup(standupId);
 
+        verify(standupRepository).findById(standupId);
         verify(standupRepository).delete(standup);
+        verify(standupRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -605,6 +677,12 @@ class StandupServiceTest {
         assertThrows(AccessDeniedException.class, () -> {
             standupService.deleteStandup(standupId);
         });
+
+        verify(standupRepository).findById(standupId);
+        verify(standupRepository, never()).delete(standup);
+        verify(standupRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -621,6 +699,12 @@ class StandupServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> {
             standupService.deleteStandup(standupId);
         });
+
+        verify(standupRepository).findById(standupId);
+        verify(standupRepository, never()).delete(any());
+        verify(standupRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
     }
 
     private void setSecurityContext(Role role, Long userId, Long teamId) {

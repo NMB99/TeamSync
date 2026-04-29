@@ -73,7 +73,7 @@ public class TeamService {
 
         if (role == Role.TEAM_MEMBER || role == Role.TEAM_LEAD) {
             if (currentUser.getTeamId() == null || !currentUser.getTeamId().equals(id)) {
-                throw new ResourceNotFoundException("Access denied: You can only view your team's information.");
+                throw new AccessDeniedException("Access denied: You can only view your team's information.");
             }
         }
 

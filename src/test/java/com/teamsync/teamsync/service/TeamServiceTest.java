@@ -2,9 +2,11 @@ package com.teamsync.teamsync.service;
 
 import com.teamsync.teamsync.dto.TeamCreateDTO;
 import com.teamsync.teamsync.dto.TeamDTO;
+import com.teamsync.teamsync.dto.TeamUpdateDTO;
 import com.teamsync.teamsync.entity.Team;
 import com.teamsync.teamsync.enums.Role;
 import com.teamsync.teamsync.enums.TeamCategory;
+import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.TeamRepository;
 import com.teamsync.teamsync.security.CustomUserDetails;
 import org.junit.jupiter.api.Test;
@@ -43,24 +45,34 @@ class TeamServiceTest {
         newTeam.setCategory(TeamCategory.TESTING);
 
         when(teamRepository.save(any(Team.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> {
+                    Team t = invocation.getArgument(0);
+                    t.setId(1L);
+                    return t;
+                });
 
         TeamDTO result = teamService.createTeam(newTeam);
 
         ArgumentCaptor<Team> captor = ArgumentCaptor.forClass(Team.class);
         verify(teamRepository).save(captor.capture());
         Team savedTeam = captor.getValue();
-
-        assertNotNull(result);
         assertEquals("Test Team", savedTeam.getName());
         assertEquals("This is a test team", savedTeam.getDescription());
         assertEquals(TeamCategory.TESTING, savedTeam.getCategory());
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("Test Team",  result.getName());
+        assertEquals("This is a test team", result.getDescription());
+        assertEquals(TeamCategory.TESTING.name(), result.getCategory());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     void getAllTeams_shouldThrowException_whenRoleIsAdmin() {
 
-        long userId = 1L;
+        Long userId = 1L;
         Long teamId = null;
 
         setSecurityContext(Role.ADMIN, userId, teamId);
@@ -68,12 +80,14 @@ class TeamServiceTest {
         assertThrows(AccessDeniedException.class, () ->
                 teamService.getAllTeams()
         );
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     void getAllTeams_shouldReturnAllTeams_whenRoleIsManager() {
 
-        long userId = 1L;
+        Long userId = 1L;
         Long teamId = null;
 
         setSecurityContext(Role.MANAGER, userId, teamId);
@@ -112,7 +126,7 @@ class TeamServiceTest {
     @Test
     void getAllTeams_shouldReturnOwnTeams_whenRoleIsTeamLead() {
 
-        long userId = 1L;
+        Long userId = 1L;
         Long teamId = 1L;
 
         setSecurityContext(Role.TEAM_LEAD, userId, teamId);
@@ -128,7 +142,6 @@ class TeamServiceTest {
         List<TeamDTO> result = teamService.getAllTeams();
 
         verify(teamRepository).findById(teamId);
-        verify(teamRepository, never()).findAll();
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -140,19 +153,257 @@ class TeamServiceTest {
     }
 
     @Test
-    void getTeamEntityById() {
+    void getTeamById_shouldReturnTeamDTO_whenManagerAccessAnyTeam() {
+
+        Long managerId = 1L;
+        Long teamId1 = 1L;
+        Long teamId2 = 2L;
+
+        setSecurityContext(Role.MANAGER, managerId, teamId1);
+
+        Team team1 = new Team();
+        team1.setId(teamId1);
+        team1.setName("Team 1");
+        team1.setDescription("This is team 1");
+        team1.setCategory(TeamCategory.TESTING);
+
+        Team team2 = new Team();
+        team2.setId(teamId2);
+        team2.setName("Team 2");
+        team2.setDescription("This is team 2");
+        team2.setCategory(TeamCategory.TESTING);
+
+        when(teamRepository.findById(teamId2)).thenReturn(Optional.of(team2));
+
+        TeamDTO result = teamService.getTeamById(teamId2);
+
+        verify(teamRepository).findById(teamId2);
+
+        assertNotNull(result);
+        assertEquals("Team 2", result.getName());
+        assertEquals("This is team 2", result.getDescription());
+        assertEquals(TeamCategory.TESTING.name(), result.getCategory());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
-    void getTeamById() {
+    void getTeamById_shouldReturnTeamDTO_whenTeamLeadAccessesOwnTeam() {
+
+        Long teamLeadId = 1L;
+        Long teamId1 = 1L;
+
+        setSecurityContext(Role.TEAM_LEAD, teamLeadId, teamId1);
+
+        Team team1 = new Team();
+        team1.setId(teamId1);
+        team1.setName("Team 1");
+        team1.setDescription("This is team 1");
+        team1.setCategory(TeamCategory.TESTING);
+
+        when(teamRepository.findById(teamId1)).thenReturn(Optional.of(team1));
+
+        TeamDTO result = teamService.getTeamById(teamId1);
+
+        verify(teamRepository).findById(teamId1);
+
+        assertNotNull(result);
+        assertEquals("Team 1", result.getName());
+        assertEquals("This is team 1", result.getDescription());
+        assertEquals(TeamCategory.TESTING.name(), result.getCategory());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
-    void updateTeam() {
+    void getTeamById_shouldThrowException_whenTeamLeadAccessesOtherTeam() {
+
+        Long teamLeadId = 1L;
+        Long teamId1 = 1L;
+        Long teamId2 = 2L;
+
+        setSecurityContext(Role.TEAM_LEAD, teamLeadId, teamId1);
+
+        assertThrows(AccessDeniedException.class, () ->
+                teamService.getTeamById(teamId2)
+        );
+
+        verifyNoInteractions(teamRepository);
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
-    void deleteTeam() {
+    void getTeamById_shouldReturnTeamDTO_whenTeamMemberAccessesOwnTeam() {
+
+        Long teamLeadId = 1L;
+        Long teamId1 = 1L;
+
+        setSecurityContext(Role.TEAM_MEMBER, teamLeadId, teamId1);
+
+        Team team1 = new Team();
+        team1.setId(teamId1);
+        team1.setName("Team 1");
+        team1.setDescription("This is team 1");
+        team1.setCategory(TeamCategory.TESTING);
+
+        when(teamRepository.findById(teamId1)).thenReturn(Optional.of(team1));
+
+        TeamDTO result = teamService.getTeamById(teamId1);
+
+        verify(teamRepository).findById(teamId1);
+
+        assertNotNull(result);
+        assertEquals("Team 1", result.getName());
+        assertEquals("This is team 1", result.getDescription());
+        assertEquals(TeamCategory.TESTING.name(), result.getCategory());
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void getTeamById_shouldThrowException_whenTeamMemberAccessesOtherTeam() {
+
+        Long teamLeadId = 1L;
+        Long teamId1 = 1L;
+        Long teamId2 = 2L;
+
+        setSecurityContext(Role.TEAM_MEMBER, teamLeadId, teamId1);
+
+        assertThrows(AccessDeniedException.class, () ->
+                teamService.getTeamById(teamId2)
+        );
+
+        verifyNoInteractions(teamRepository);
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void getTeamById_shouldThrowException_whenTeamNotFound() {
+
+        Long teamLeadId = 1L;
+        Long teamId = 1L;
+
+        setSecurityContext(Role.MANAGER, teamLeadId, null);
+
+        when(teamRepository.findById(teamId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                teamService.getTeamById(teamId)
+        );
+
+        verify(teamRepository).findById(teamId);
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void updateTeam_shouldReturnTeamDTO_whenTeamExists() {
+
+        Long teamId = 1L;
+        Long managerId = 1L;
+
+        setSecurityContext(Role.MANAGER, managerId, teamId);
+
+        TeamUpdateDTO updateDto = new TeamUpdateDTO();
+        updateDto.setName("Updated Team 1");
+        updateDto.setDescription("This is updated team 1");
+        updateDto.setCategory(TeamCategory.DEVELOPMENT);
+
+        Team team = new Team();
+        team.setId(teamId);
+        team.setName("Team 1");
+        team.setDescription("This is team 1");
+        team.setCategory(TeamCategory.TESTING);
+
+        when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
+        when(teamRepository.save(any(Team.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        TeamDTO result = teamService.updateTeam(teamId, updateDto);
+        
+        verify(teamRepository).findById(teamId);
+
+        ArgumentCaptor<Team> captor = ArgumentCaptor.forClass(Team.class);
+        verify(teamRepository).save(captor.capture());
+        Team updatedTeam = captor.getValue();
+        assertEquals(teamId, updatedTeam.getId());
+        assertEquals(updateDto.getName(), updatedTeam.getName());
+        assertEquals(updateDto.getDescription(), updatedTeam.getDescription());
+        assertEquals(updateDto.getCategory(), updatedTeam.getCategory());
+
+        assertNotNull(result);
+        assertEquals(updateDto.getName(), result.getName());
+        assertEquals(updateDto.getDescription(), result.getDescription());
+        assertEquals(updateDto.getCategory().name(), result.getCategory());
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void updateTeam_shouldThrowException_whenTeamNotFound() {
+
+        Long teamId = 1L;
+        Long managerId = 1L;
+
+        setSecurityContext(Role.MANAGER, managerId, null);
+
+        when(teamRepository.findById(teamId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                teamService.updateTeam(teamId, new TeamUpdateDTO())
+        );
+
+        verify(teamRepository).findById(teamId);
+        verify(teamRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void deleteTeam_shouldDeleteTeam_whenTeamExists() {
+
+        Long teamId = 1L;
+        Long managerId = 1L;
+
+        setSecurityContext(Role.MANAGER, managerId, teamId);
+
+        Team team = new Team();
+        team.setId(teamId);
+        team.setName("Team 1");
+        team.setDescription("This is team 1");
+        team.setCategory(TeamCategory.TESTING);
+
+        when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
+
+        teamService.deleteTeam(teamId);
+
+        verify(teamRepository).findById(teamId);
+        verify(teamRepository).deleteById(teamId);
+        verify(teamRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void deleteTeam_shouldThrowException_whenTeamNotFound() {
+
+        Long teamId = 1L;
+        Long managerId = 1L;
+
+        setSecurityContext(Role.MANAGER, managerId, null);
+
+        when(teamRepository.findById(teamId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                teamService.deleteTeam(teamId)
+        );
+
+        verify(teamRepository).findById(teamId);
+        verify(teamRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
     }
 
     private void setSecurityContext(Role role, Long userId, Long teamId) {
