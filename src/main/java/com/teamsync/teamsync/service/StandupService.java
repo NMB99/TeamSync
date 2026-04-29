@@ -10,6 +10,7 @@ import com.teamsync.teamsync.exception.BadRequestException;
 import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.StandupRepository;
 import com.teamsync.teamsync.security.CustomUserDetails;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,10 +34,7 @@ public class StandupService {
 
     @Transactional
     public StandupDTO createStandup(StandupCreateDTO standupDTO) {
-        CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+        CustomUserDetails currentUser = getCurrentUser();
 
         Standup standup = new Standup();
         standup.setDate(LocalDate.now());
@@ -50,45 +48,50 @@ public class StandupService {
         return convertStandupToDTO(standupRepository.save(standup));
     }
 
-    public List<StandupDTO> getAllStandups(Long teamId, LocalDate date) {
-        CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+    public List<StandupDTO> getAllStandups(LocalDate date) {
+        CustomUserDetails currentUser = getCurrentUser();
 
         Long userId = currentUser.getId();
         Role role = currentUser.getRoleEnum();
         List<Standup> standups;
 
         if (role == Role.TEAM_MEMBER) {
-            standups = standupRepository.findByUserId(userId);
+            if (date != null) {
+                standups = standupRepository.findByUserIdAndDate(userId, date);
+            }
+            else {
+                standups = standupRepository.findByUserId(userId);
+            }
+        }
+        else if (role == Role.TEAM_LEAD || role == Role.MANAGER) {
+            Long teamId = currentUser.getTeamId();
+            if (date != null) {
+                standups = standupRepository.findByTeamIdAndDate(teamId, date);
+            }
+            else {
+                standups = standupRepository.findByTeamId(teamId);
+            }
         }
         else {
-            if (teamId != null && date != null) {
-                standups = standupRepository.findByTeamIdAndDate(teamId, date);
-            } else if (teamId != null) {
-                standups = standupRepository.findByTeamId(teamId);
-            } else {
-                throw new IllegalArgumentException("team id is required to fetch standups.");
-            }
+            throw new AccessDeniedException("Access denied!.");
         }
 
         return standups.stream().map(this::convertStandupToDTO).toList();
     }
 
     public StandupDTO getStandupById(Long id) {
-        CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+        CustomUserDetails currentUser = getCurrentUser();
 
         Standup standup = standupRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Standup with id " + id + " not found.")
                 );
 
-        if (!standup.getUser().getId().equals(currentUser.getId())) {
-            throw new BadRequestException("You can only view your own standups.");
+        if (currentUser.getRoleEnum() == Role.TEAM_MEMBER && !standup.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You can only view your own standups.");
+        }
+        if ((currentUser.getRoleEnum() == Role.TEAM_LEAD || currentUser.getRoleEnum() == Role.MANAGER) && !standup.getTeam().getId().equals(currentUser.getTeamId())) {
+            throw new AccessDeniedException("You can only view your team's standups.");
         }
 
         return convertStandupToDTO(standup);
@@ -96,10 +99,7 @@ public class StandupService {
 
     @Transactional
     public StandupDTO updateStandup(Long id, StandupUpdateDTO standup) {
-        CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+        CustomUserDetails currentUser = getCurrentUser();
 
         Standup exists = standupRepository.findById(id)
                 .orElseThrow(() ->
@@ -107,7 +107,7 @@ public class StandupService {
                 );
 
         if (!exists.getUser().getId().equals(currentUser.getId())) {
-            throw new BadRequestException("You can only update your own standups.");
+            throw new AccessDeniedException("You can only update your own standups.");
         }
 
         if (standup.getYesterday() != null) {
@@ -126,10 +126,7 @@ public class StandupService {
 
     @Transactional
     public void deleteStandup(Long id) {
-        CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+        CustomUserDetails currentUser = getCurrentUser();
 
         Standup standup = standupRepository.findById(id)
                 .orElseThrow(() ->
@@ -137,7 +134,7 @@ public class StandupService {
                 );
 
         if (!standup.getUser().getId().equals(currentUser.getId())) {
-            throw new BadRequestException("You can only delete your own standups.");
+            throw new AccessDeniedException("You can only delete your own standups.");
         }
 
         standupRepository.delete(standup);
@@ -153,5 +150,12 @@ public class StandupService {
         standupDTO.setUserId(standup.getUser().getId());
         standupDTO.setTeamId(standup.getTeam().getId());
         return standupDTO;
+    }
+
+    private CustomUserDetails getCurrentUser() {
+        return (CustomUserDetails) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
     }
 }

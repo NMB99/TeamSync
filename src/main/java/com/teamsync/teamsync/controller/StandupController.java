@@ -24,34 +24,34 @@ public class StandupController {
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('MANAGER', 'TEAM_LEAD', 'TEAM_MEMBER')")
     public ResponseEntity<StandupDTO> createStandup(@RequestBody @Valid StandupCreateDTO standup) {
         StandupDTO newStandup = standupService.createStandup(standup);
         return new ResponseEntity<>(newStandup, HttpStatus.CREATED);
     }
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<StandupDTO>> getAllStandups(@RequestParam(required = false) Long teamId, @RequestParam(required = false) LocalDate date) {
-        return new ResponseEntity<>(standupService.getAllStandups(teamId, date), HttpStatus.OK);
+    @PreAuthorize("hasAnyRole('MANAGER', 'TEAM_LEAD', 'TEAM_MEMBER')")
+    public ResponseEntity<List<StandupDTO>> getAllStandups(@RequestParam(required = false) LocalDate date) {
+        return new ResponseEntity<>(standupService.getAllStandups(date), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('MANAGER', 'TEAM_LEAD', 'TEAM_MEMBER')")
     public ResponseEntity<StandupDTO> getStandupById(@PathVariable Long id) {
         StandupDTO standup = standupService.getStandupById(id);
         return new ResponseEntity<>(standup, HttpStatus.OK);
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('MANAGER', 'TEAM_LEAD', 'TEAM_MEMBER')")
     public ResponseEntity<StandupDTO> updateStandup(@PathVariable Long id, @RequestBody @Valid StandupUpdateDTO standup) {
         StandupDTO updated = standupService.updateStandup(id, standup);
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('MANAGER', 'TEAM_LEAD', 'TEAM_MEMBER')")
     public ResponseEntity<Void> deleteStandup(@PathVariable Long id) {
         standupService.deleteStandup(id);
         return ResponseEntity.noContent().build();

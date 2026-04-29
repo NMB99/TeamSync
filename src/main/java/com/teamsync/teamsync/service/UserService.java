@@ -96,13 +96,16 @@ public class UserService {
         if (user.getTeamId() != null) {
             updateUser.setTeam(teamService.getTeamEntityById(user.getTeamId()));
         }
+        if (user.getRole() != null) {
+            updateUser.setRole(user.getRole());
+        }
         return convertUserToDTO(userRepository.save(updateUser));
     }
 
     @Transactional
     public void deleteUser(Long id) {
-        getUserEntityById(id);
-        userRepository.deleteById(id);
+        User user = getUserEntityById(id);
+        userRepository.delete(user);
     }
 
     private UserDTO convertUserToDTO(User user) {
