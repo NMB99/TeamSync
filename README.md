@@ -7,6 +7,7 @@ A production-ready REST API backend for IT teams to automate daily standups, man
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?style=flat-square)
 ![JWT](https://img.shields.io/badge/Auth-JWT-yellow?style=flat-square)
 ![Tests](https://img.shields.io/badge/Tests-44%20passing-success?style=flat-square)
+![Java CI](https://github.com/NMB99/TeamSync/actions/workflows/ci.yml/badge.svg)
 
 [//]: # (![License]&#40;https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square&#41;)
 
