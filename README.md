@@ -1,4 +1,4 @@
-# TeamSync — Daily Standup Automation Backend
+# TeamSync - Daily Standup Automation Backend
 
 A production-ready REST API backend for IT teams to automate daily standups, manage team structures, and generate progress reports, built with Java 17 and Spring Boot.
 
