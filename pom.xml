@@ -12,7 +12,7 @@
 	<artifactId>teamsync</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>TeamSync</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Daily standup automation backend built with Spring Boot, JWT, and PostgreSQL</description>
 	<url/>
 	<licenses>
 		<license/>
