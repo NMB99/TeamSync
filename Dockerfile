@@ -6,6 +6,7 @@ COPY pom.xml .
 COPY mvnw .
 COPY .mvn .mvn
 COPY src src
+ARG CACHEBUST=1
 RUN ./mvnw clean package -DskipTests --no-transfer-progress
 RUN cat src/main/resources/application.properties
 
