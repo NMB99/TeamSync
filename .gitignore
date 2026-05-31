@@ -35,6 +35,3 @@ build/
 
 ### Mac ###
 .DS_Store
-
-### Application Properties ###
-application.properties
