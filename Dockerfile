@@ -6,7 +6,8 @@ COPY pom.xml .
 COPY mvnw .
 COPY .mvn .mvn
 COPY src src
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests --no-transfer-progress
+RUN cat src/main/resources/application.properties
 
 # Stage 2 - Run
 FROM eclipse-temurin:17-jre-alpine
