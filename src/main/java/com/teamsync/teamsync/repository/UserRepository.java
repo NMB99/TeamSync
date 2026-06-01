@@ -1,6 +1,7 @@
 package com.teamsync.teamsync.repository;
 
 import com.teamsync.teamsync.entity.User;
+import com.teamsync.teamsync.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     List<User> findByTeamId(Long teamId);
+
+    int countByRole(Role role);
 }

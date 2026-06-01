@@ -106,7 +106,21 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
+        CustomUserDetails currentUser = (CustomUserDetails) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        if (currentUser.getId().equals(id)) {
+            throw new BadRequestException("You cannot delete your own account.");
+        }
+
         User user = getUserEntityById(id);
+
+        if (user.getRole() == Role.ADMIN && userRepository.countByRole(Role.ADMIN) <= 1) {
+            throw new BadRequestException("You cannot delete the last admin account.");
+        }
+
         userRepository.delete(user);
     }
 
