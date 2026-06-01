@@ -25,6 +25,12 @@ public class ReportService {
         if (startDate != null && endDate != null) {
             standups = standupRepository.findByTeamIdAndDateBetween(teamId, startDate, endDate);
         }
+        else if (startDate != null) {
+            standups = standupRepository.findByTeamIdAndDateGreaterThanEqual(teamId, startDate);
+        }
+        else if (endDate != null) {
+            standups = standupRepository.findByTeamIdAndDateLessThanEqual(teamId, endDate);
+        }
         else {
             standups = standupRepository.findByTeamId(teamId);
         }
