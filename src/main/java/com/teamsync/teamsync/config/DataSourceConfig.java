@@ -25,6 +25,8 @@ public class DataSourceConfig {
                 ? rawUrl
                 : "jdbc:" + rawUrl;
 
+        jdbcUrl = jdbcUrl.replaceAll("(jdbc:postgresql://)([^@]+@)", "$1");
+
         return DataSourceBuilder.create()
                 .url(jdbcUrl)
                 .username(username)
