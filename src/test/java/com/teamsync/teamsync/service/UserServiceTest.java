@@ -318,34 +318,61 @@ class UserServiceTest {
     @Test
     void deleteUser_shouldDeleteUser_whenUserExists() {
 
-        Long userId = 1L;
+        setSecurityContext(Role.ADMIN, null);
+
+        Long targetUserId = 2L;
 
         User user = new User();
-        user.setId(userId);
+        user.setId(targetUserId);
+        user.setFullName("Alex Mark");
+        user.setRole(Role.TEAM_MEMBER);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.findById(targetUserId)).thenReturn(Optional.of(user));
 
-        userService.deleteUser(userId);
+        userService.deleteUser(targetUserId);
 
-        verify(userRepository).findById(userId);
+        verify(userRepository).findById(targetUserId);
         verify(userRepository).delete(user);
         verify(userRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     void deleteUser_shouldThrowException_whenUserDoesNotExists() {
 
-        Long userId = 1L;
+        setSecurityContext(Role.ADMIN, null);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        Long targetUserId = 2L;
+
+        when(userRepository.findById(targetUserId)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> {
-            userService.deleteUser(userId);
+            userService.deleteUser(targetUserId);
         });
 
-        verify(userRepository).findById(userId);
+        verify(userRepository).findById(targetUserId);
         verify(userRepository, never()).delete(any());
         verify(userRepository, never()).save(any());
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void deleteUser_shouldThrowException_whenUserDeletesThemself() {
+
+        setSecurityContext(Role.ADMIN, null);
+
+        Long targetUserId = 1L;
+
+        assertThrows(BadRequestException.class, () -> {
+            userService.deleteUser(targetUserId);
+        });
+
+        verify(userRepository, never()).findById(any());
+        verify(userRepository, never()).delete(any());
+
+        SecurityContextHolder.clearContext();
     }
 
     private void setSecurityContext(Role role, Long teamId) {
