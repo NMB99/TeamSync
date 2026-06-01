@@ -9,6 +9,8 @@ import com.teamsync.teamsync.enums.TeamCategory;
 import com.teamsync.teamsync.repository.TeamRepository;
 import com.teamsync.teamsync.repository.UserRepository;
 import com.teamsync.teamsync.security.JwtUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Authentication", description = "Login and initial setup")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ public class AuthController {
     private final TeamRepository teamRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Operation(summary = "Login", description = "Authenticates a user and returns a JWT token")
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) {
         try {
@@ -58,6 +62,7 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "Initial Setup", description = "Creates the first ADMIN user. Self-locks after first use.")
     @Transactional
     @PostMapping("/setup")
     public ResponseEntity<String> setup() {
