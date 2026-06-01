@@ -10,6 +10,7 @@ import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.UserRepository;
 import com.teamsync.teamsync.security.CustomUserDetails;
 import com.teamsync.teamsync.util.PasswordUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class UserService {
 
@@ -44,7 +46,7 @@ public class UserService {
         String password = PasswordUtil.generateRandomPassword();
         String encodedPassword = passwordEncoder.encode(password);
 
-        System.out.println("Password: " + password);
+        log.debug("Generated password for new user: {}", password);
         user.setPassword(encodedPassword);
 
         if (userDTO.getTeamId() != null) {

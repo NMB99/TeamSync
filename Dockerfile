@@ -12,7 +12,7 @@ RUN cat src/main/resources/application.properties
 RUN jar tf target/teamsync-0.0.1-SNAPSHOT.jar | grep postgresql
 
 # Stage 2 - Run
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 COPY --from=build /app/target/teamsync-0.0.1-SNAPSHOT.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
