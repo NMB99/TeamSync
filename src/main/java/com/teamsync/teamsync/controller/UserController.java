@@ -1,6 +1,7 @@
 package com.teamsync.teamsync.controller;
 
 import com.teamsync.teamsync.dto.UserCreateDTO;
+import com.teamsync.teamsync.dto.UserCreatedDTO;
 import com.teamsync.teamsync.dto.UserDTO;
 import com.teamsync.teamsync.dto.UserUpdateDTO;
 import com.teamsync.teamsync.service.UserService;
@@ -28,8 +29,8 @@ public class UserController {
     @Operation(summary = "Create user", description = "Requires ADMIN role")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDTO> createUser(@RequestBody @Valid UserCreateDTO newUserDTO) {
-        UserDTO newUser = userService.createUser(newUserDTO);
+    public ResponseEntity<UserCreatedDTO> createUser(@RequestBody @Valid UserCreateDTO newUserDTO) {
+        UserCreatedDTO newUser = userService.createUser(newUserDTO);
         return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
 

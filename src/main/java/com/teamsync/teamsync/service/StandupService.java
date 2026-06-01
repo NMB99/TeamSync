@@ -36,6 +36,10 @@ public class StandupService {
     public StandupDTO createStandup(StandupCreateDTO standupDTO) {
         CustomUserDetails currentUser = getCurrentUser();
 
+        if (!standupRepository.findByUserIdAndDate(currentUser.getId(), LocalDate.now()).isEmpty()) {
+            throw new BadRequestException("You have already submitted a standup for today.");
+        }
+
         Standup standup = new Standup();
         standup.setDate(LocalDate.now());
         standup.setYesterday(standupDTO.getYesterday());

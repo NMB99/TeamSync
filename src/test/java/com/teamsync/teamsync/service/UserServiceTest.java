@@ -1,6 +1,7 @@
 package com.teamsync.teamsync.service;
 
 import com.teamsync.teamsync.dto.UserCreateDTO;
+import com.teamsync.teamsync.dto.UserCreatedDTO;
 import com.teamsync.teamsync.dto.UserDTO;
 import com.teamsync.teamsync.dto.UserUpdateDTO;
 import com.teamsync.teamsync.entity.Team;
@@ -71,7 +72,7 @@ class UserServiceTest {
         when(userRepository.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        UserDTO result = userService.createUser(newUser);
+        UserCreatedDTO result = userService.createUser(newUser);
 
         verify(userRepository).existsByEmail(newUser.getEmail());
         verify(passwordEncoder).encode(anyString());

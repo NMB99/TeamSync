@@ -23,6 +23,7 @@ public class UserCreateDTO {
     @NotNull
     private Role role;
 
+    @NotNull( message = "teamId is required")
     private Long teamId;
 
 }

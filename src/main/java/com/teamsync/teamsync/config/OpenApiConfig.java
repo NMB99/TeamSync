@@ -20,7 +20,15 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("TeamSync API")
-                        .description("Daily standup automation backend. Built with Spring Boot, JWT auth, and role-based access control.")
+                        .description("""
+                                Daily standup automation backend. Built with Spring Boot, JWT auth, and role-based access control.
+                                
+                                **Visitor credentials (TEAM_LEAD role):**
+                                - Email: `visitor@teamsync.com`
+                                - Password: `Visitor@1234`
+                                
+                                Use `POST /api/auth/login` to get a JWT token, then click **Authorize** and paste it.
+                                """)
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("Nilay Bhaisare")

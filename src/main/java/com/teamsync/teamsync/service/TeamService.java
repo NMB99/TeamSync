@@ -6,6 +6,7 @@ import com.teamsync.teamsync.dto.TeamUpdateDTO;
 import com.teamsync.teamsync.entity.Team;
 import com.teamsync.teamsync.entity.User;
 import com.teamsync.teamsync.enums.Role;
+import com.teamsync.teamsync.exception.BadRequestException;
 import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.TeamRepository;
 import com.teamsync.teamsync.security.CustomUserDetails;
@@ -101,7 +102,11 @@ public class TeamService {
 
     @Transactional
     public void deleteTeam(Long id) {
-        getTeamEntityById(id);
+        Team team = getTeamEntityById(id);
+
+        if (!team.getUsers().isEmpty()) {
+            throw new BadRequestException("You cannot delete a team with existing members. Reassign members to other teams first.");
+        }
         teamRepository.deleteById(id);
     }
 

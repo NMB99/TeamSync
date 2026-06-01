@@ -1,6 +1,7 @@
 package com.teamsync.teamsync.service;
 
 import com.teamsync.teamsync.dto.UserCreateDTO;
+import com.teamsync.teamsync.dto.UserCreatedDTO;
 import com.teamsync.teamsync.dto.UserDTO;
 import com.teamsync.teamsync.dto.UserUpdateDTO;
 import com.teamsync.teamsync.entity.User;
@@ -10,7 +11,6 @@ import com.teamsync.teamsync.exception.ResourceNotFoundException;
 import com.teamsync.teamsync.repository.UserRepository;
 import com.teamsync.teamsync.security.CustomUserDetails;
 import com.teamsync.teamsync.util.PasswordUtil;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Slf4j
 @Service
 public class UserService {
 
@@ -33,7 +32,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserDTO createUser(UserCreateDTO userDTO) {
+    public UserCreatedDTO createUser(UserCreateDTO userDTO) {
         if (userRepository.existsByEmail((userDTO.getEmail()))) {
             throw new BadRequestException("Email already exists");
         }
@@ -46,7 +45,6 @@ public class UserService {
         String password = PasswordUtil.generateRandomPassword();
         String encodedPassword = passwordEncoder.encode(password);
 
-        log.debug("Generated password for new user: {}", password);
         user.setPassword(encodedPassword);
 
         if (userDTO.getTeamId() != null) {
@@ -54,7 +52,15 @@ public class UserService {
         }
 
         User savedUser = userRepository.save(user);
-        return convertUserToDTO(savedUser);
+
+        UserCreatedDTO createdUser = new UserCreatedDTO();
+        createdUser.setId(savedUser.getId());
+        createdUser.setFullName(user.getFullName());
+        createdUser.setEmail(user.getEmail());
+        createdUser.setRole(user.getRole().toString());
+        createdUser.setGeneratedPassword(password);
+
+        return createdUser;
     }
 
     public List<UserDTO> getAllUsers() {

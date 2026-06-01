@@ -9,16 +9,15 @@ A production-ready REST API backend for IT teams to automate daily standups, man
 ![Tests](https://img.shields.io/badge/Tests-44%20passing-success?style=flat-square)
 ![Java CI](https://github.com/NMB99/TeamSync/actions/workflows/ci.yml/badge.svg)
 
-[//]: # (![License]&#40;https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square&#41;)
-
 ---
 
 ## Live Demo
 
-**Base URL:** `https://teamsync-api.up.railway.app`
+**Swagger UI:** [Live API Docs](https://teamsync-api.up.railway.app/swagger-ui.html)
 
-> This is a REST API — use Postman or any HTTP client to interact with it.  
-> Example: `POST https://teamsync-api.up.railway.app/api/auth/login`
+> Use the Swagger UI to explore and test all endpoints interactively.  
+> Visitor credentials (TEAM_LEAD): `visitor@teamsync.com` / `Visitor@1234`  
+> Login via `POST /api/auth/login`, click **Authorize**, paste the token.
 
 ---
 
@@ -39,6 +38,7 @@ TeamSync eliminates manual standup coordination in IT teams. Team members submit
 | Database | PostgreSQL |
 | Validation | Jakarta Validation |
 | Testing | JUnit 5, Mockito |
+| Documentation | Swagger UI (springdoc-openapi) |
 | Build Tool | Maven |
 
 ---
@@ -80,9 +80,12 @@ Security: JWT Auth Filter intercepts every request
 - **Role-Based Access Control** - four roles with fine-grained permissions
 - **Standup Management** - submit, update, delete daily standups with ownership enforcement
 - **Team Management** - create and manage teams with member assignments
-- **Report Generation** - team standup reports with optional date range filtering
+- **Report Generation** - team standup reports with optional date range filtering (start only, end only, or both)
+- **Admin Safety Guards** - prevents self-deletion, deletion of last admin, and team deletion with active members
+- **Duplicate Standup Prevention** - one standup per user per day enforced at service layer
 - **Global Exception Handling** - consistent error responses across all endpoints
 - **Input Validation** - request-level validation via Jakarta Validation annotations
+- **Swagger UI** - interactive API documentation with JWT auth support
 - **Unit Tests** - 44 tests covering service layer with JUnit 5 and Mockito
 
 ---
@@ -137,12 +140,13 @@ Security: JWT Auth Filter intercepts every request
 | DELETE | `/api/standups/{id}` | Delete standup | MANAGER, TEAM_LEAD, TEAM_MEMBER |
 
 ### Reports
-| Method | Endpoint                 | Description             | Access |
-|---|--------------------------|-------------------------|---|
-| GET | `/api/reports`           | Get team standup report | MANAGER, TEAM_LEAD |
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| GET | `/api/reports` | Get team standup report | MANAGER, TEAM_LEAD |
 
 > Query params: `teamId` (required), `startDate` (optional), `endDate` (optional)  
 > Example: `/api/reports?teamId=1&startDate=2026-04-01&endDate=2026-04-30`
+
 ---
 
 ## Getting Started
@@ -187,7 +191,8 @@ docker compose up --build
 mvn spring-boot:run
 ```
 
-API will be available at `http://localhost:8080`
+API will be available at `http://localhost:8080`  
+Swagger UI will be available at `http://localhost:8080/swagger-ui.html`
 
 ---
 
@@ -205,7 +210,7 @@ mvn test
 
 ```
 src/main/java/com/teamsync/teamsync/
-├── config/          # Security configuration
+├── config/          # Security and OpenAPI configuration
 ├── controller/      # REST controllers
 ├── dto/             # Request and response DTOs
 ├── entity/          # JPA entities (User, Team, Standup)
@@ -221,9 +226,9 @@ src/main/java/com/teamsync/teamsync/
 
 ## Upcoming Features
 
+- [ ] Integrated CD pipeline — Railway deploy gated on GitHub Actions CI passing
 - [ ] Scheduled daily email reports (7pm) to TEAM_LEAD and MANAGER
 - [ ] PDF report generation
-- [ ] Swagger/OpenAPI documentation
 
 ---
 
