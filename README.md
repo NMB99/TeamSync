@@ -13,6 +13,15 @@ A production-ready REST API backend for IT teams to automate daily standups, man
 
 ---
 
+## Live Demo
+
+**Base URL:** `https://teamsync-api.up.railway.app`
+
+> This is a REST API — use Postman or any HTTP client to interact with it.  
+> Example: `POST https://teamsync-api.up.railway.app/api/auth/login`
+
+---
+
 ## What It Does
 
 TeamSync eliminates manual standup coordination in IT teams. Team members submit their daily standups via API, team leads and managers get filtered views of their team's progress, and reports are aggregated automatically, all secured with JWT authentication and role-based access control.
@@ -152,30 +161,28 @@ git clone https://github.com/NMB99/TeamSync.git
 cd TeamSync
 ```
 
-**2. Create PostgreSQL database**
-```sql
-CREATE DATABASE teamsync;
+**2. Create a `.env` file in the project root**
+```env
+SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/teamsync
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+POSTGRES_DB=teamsync
+JWT_SECRET=your_secret_min_64_chars
+JWT_EXPIRATION=86400000
 ```
 
-**3. Configure application.properties**
-
-Copy the template and fill in your values:
-```properties
-spring.application.name=TeamSync
-
-spring.datasource.url=jdbc:postgresql://localhost:5432/teamsync
-spring.datasource.username=YOUR_DB_USERNAME
-spring.datasource.password=YOUR_DB_PASSWORD
-
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-
-jwt.secret=YOUR_JWT_SECRET_MIN_32_CHARS
-jwt.expiration=86400000
+**3. Run with Docker**
+```bash
+docker compose up --build
 ```
 
-**4. Run the application**
+---
+
+**Or run without Docker**
+
+1. Install PostgreSQL locally and create a database named `teamsync`
+2. Add environment variables to your IDE run configuration
+3. Run:
 ```bash
 mvn spring-boot:run
 ```
@@ -216,7 +223,6 @@ src/main/java/com/teamsync/teamsync/
 
 - [ ] Scheduled daily email reports (7pm) to TEAM_LEAD and MANAGER
 - [ ] PDF report generation
-- [ ] CI/CD pipeline with GitHub Actions
 - [ ] Swagger/OpenAPI documentation
 
 ---
